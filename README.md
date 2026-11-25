@@ -81,5 +81,23 @@ npm run dev
 - 列表接口统一返回 `{ items, total, page, size }`，动作接口统一返回 `{ ok, message }`。
 - 状态流转只允许在 `app/services` 里改，路由层不做业务判断。
 
+## 新鲜度来源批整组报送
+
+新鲜度追踪除逐条登记外，另提供整组报送入口（`backend/app/services/freshness_batch.py`），
+前端在「新鲜度追踪」页点「整组报送来源批」、在「服务等级目标」页点「按观测批次重算结算」。
+
+- `POST /api/freshness/batch-submissions`：一个报送回执携带多个来源批，
+  观测读数与迟到更正按来源批自报业务期批量写入；`fail_keys` 可注入部分失败。
+- `GET  /api/freshness/batch-submissions/{receipt_no}`：持回执查询已确认与尚未确认的来源批。
+- `GET  /api/freshness/window-readings`：原件与补送件按更正序号合并后的现行窗口读数。
+- `GET  /api/freshness/source-batches`：来源批受理记录（可按回执过滤）。
+- `POST /api/freshness/contracts/{contract_id}/settle-sla`：用关联观测批次重算
+  等级目标结算样本，返回实际采用样本与尚未确认的来源批。
+
+规则：同一回执重试幂等；原件与补送件带同一更正序号合并为一笔窗口读数；
+迟到读数归原观测期、先到读数留在先到业务期；窗口读数已接受更新序号时，
+旧序号新值不覆盖，现行值继续供结算。
+
+
 领域：数据工程
 子方向：数据分析与数据应用
